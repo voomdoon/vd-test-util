@@ -2,7 +2,7 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>de.voomdoon.util</groupId>
+		<groupId>de.voomdoon</groupId>
 		<artifactId>vd-parent</artifactId>
 		<version>0.1.0-SNAPSHOT</version>
 		<relativePath />
