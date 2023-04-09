@@ -1,4 +1,4 @@
-package de.voomdoon.util.test.tests;
+package de.voomdoon.testing.tests;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -14,6 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
+
+import de.voomdoon.testing.tests.TestBase;
 
 /**
  * Test class for {@link TestBase}.

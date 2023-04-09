@@ -1,11 +1,11 @@
-package de.voomdoon.util.test.tests;
+package de.voomdoon.testing.tests;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.AfterEach;
 
 import de.voomdoon.logging.LogManager;
@@ -93,12 +93,30 @@ public abstract class TestBase {
 	void tearDownTempDirectory() {
 		if (tempDirectory != null && Files.exists(tempDirectory)) {
 			try {
-				FileUtils.deleteDirectory(tempDirectory.toFile());
+				deleteDirectory(tempDirectory.toFile());
 			} catch (IOException e) {
 				// TODO implement error handling
 				throw new RuntimeException("Error at 'tearDownTempDirectory': " + e.getMessage(), e);
 			}
 		}
+	}
+
+	/**
+	 * DOCME add JavaDoc for method deleteDirectory
+	 * 
+	 * @param directory
+	 * @since 0.1.0
+	 */
+	private void deleteDirectory(File directory) throws IOException {
+		for (File file : directory.listFiles()) {
+			if (file.isDirectory()) {
+				deleteDirectory(file);// TESTME
+			} else if (file.isFile()) {
+				Files.delete(file.toPath());
+			}
+		}
+
+		Files.delete(directory.toPath());
 	}
 
 	/**
