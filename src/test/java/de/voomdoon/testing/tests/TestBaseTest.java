@@ -15,8 +15,6 @@ import java.nio.file.Paths;
 
 import org.junit.jupiter.api.Test;
 
-import de.voomdoon.testing.tests.TestBase;
-
 /**
  * Test class for {@link TestBase}.
  *
