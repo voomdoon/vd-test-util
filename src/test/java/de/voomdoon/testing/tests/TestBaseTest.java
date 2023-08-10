@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -167,6 +168,39 @@ public abstract class TestBaseTest {
 	 * @since 0.1.0
 	 */
 	static class TearDowntempDirectoryTest extends TestBase {
+
+		/**
+		 * DOCME add JavaDoc for method test_directory
+		 * 
+		 * @since DOCME add inception version number
+		 */
+		@Test
+		void test_directory() throws Exception {
+			logTestStart();
+
+			File directory = new File(getTempDirectory() + "/directory");
+			directory.mkdir();
+
+			tearDownTempDirectory();
+
+			assertThat(directory).doesNotExist();
+		}
+
+		/**
+		 * @since DOCME add inception version number
+		 */
+		@Test
+		void test_file() throws Exception {
+			logTestStart();
+
+			Path file = Path.of(getTempDirectory().toString(), "test.file");
+
+			Files.writeString(file, "test");
+
+			tearDownTempDirectory();
+
+			assertThat(file.toFile()).doesNotExist();
+		}
 
 		/**
 		 * @throws Exception
