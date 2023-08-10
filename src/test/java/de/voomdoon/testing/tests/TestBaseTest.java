@@ -173,7 +173,7 @@ public abstract class TestBaseTest {
 		 * @since 0.1.0
 		 */
 		@Test
-		void test() throws Exception {
+		void test_root() throws Exception {
 			logTestStart();
 
 			Path actual = getTempDirectory();
@@ -183,8 +183,12 @@ public abstract class TestBaseTest {
 			assertThat(actual).doesNotExist();
 		}
 
+		/**
+		 * @throws Exception
+		 * @since DOCME add inception version number
+		 */
 		@Test
-		void test_inUse() throws Exception {
+		void test_RuntimeException_file_inUse() throws Exception {
 			logTestStart();
 
 			Path temp = getTempDirectory();
