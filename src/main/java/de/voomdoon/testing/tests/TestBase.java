@@ -110,8 +110,8 @@ public abstract class TestBase {
 	private void deleteDirectory(File directory) throws IOException {
 		for (File file : directory.listFiles()) {
 			if (file.isDirectory()) {
-				deleteDirectory(file);// TESTME
-			} else if (file.isFile()) {
+				deleteDirectory(file);
+			} else {
 				Files.delete(file.toPath());
 			}
 		}
