@@ -11,7 +11,7 @@ import org.junit.jupiter.api.AfterEach;
 import de.voomdoon.logging.LogManager;
 import de.voomdoon.logging.Logger;
 
-//TODO https://github.com/voomdoon/vd-test-util/issues/1 rework logging of test start and end using TestExecutionListener
+//TODO #1: rework logging of test start and end using TestExecutionListener
 
 /**
  * Base class for tests.
