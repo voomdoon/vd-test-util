@@ -11,6 +11,8 @@ import org.junit.jupiter.api.AfterEach;
 import de.voomdoon.logging.LogManager;
 import de.voomdoon.logging.Logger;
 
+//TODO #1: rework logging of test start and end using TestExecutionListener
+
 /**
  * Base class for tests.
  *
@@ -60,7 +62,7 @@ public abstract class TestBase {
 	 * @return {@link String}
 	 * @since 0.1.0
 	 */
-	protected String getTestMethodName() {
+	protected String getTestMethodName() {// TESTME
 		if (testMethodName == null) {
 			throw new IllegalStateException("Test method name not known => 'logTestStart' not called!");
 		}
