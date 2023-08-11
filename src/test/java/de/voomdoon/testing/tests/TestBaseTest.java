@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -32,7 +33,8 @@ public abstract class TestBaseTest {
 	 *
 	 * @since 0.1.0
 	 */
-	static class GetTempDirectoryTest extends TestBase {
+	@Nested
+	class GetTempDirectoryTest extends TestBase {
 
 		/**
 		 * @since 0.1.0
@@ -97,7 +99,8 @@ public abstract class TestBaseTest {
 	 *
 	 * @since 0.1.0
 	 */
-	static class GetTestMethodNameTest extends TestBase {
+	@Nested
+	class GetTestMethodNameTest extends TestBase {
 
 		@Test
 		void test_error_IllegalStateException() throws Exception {
@@ -139,7 +142,8 @@ public abstract class TestBaseTest {
 	 *
 	 * @since 0.1.0
 	 */
-	static class LogTestStartTest extends TestBase {
+	@Nested
+	class LogTestStartTest extends TestBase {
 
 		/**
 		 * @throws Exception
@@ -167,7 +171,8 @@ public abstract class TestBaseTest {
 	 *
 	 * @since 0.1.0
 	 */
-	static class TearDowntempDirectoryTest extends TestBase {
+	@Nested
+	class TearDowntempDirectoryTest extends TestBase {
 
 		/**
 		 * DOCME add JavaDoc for method test_directory

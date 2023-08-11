@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.File;
 import java.io.IOException;
 
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -23,7 +24,8 @@ class FileTestingUtilTest {
 	 *
 	 * @since 0.1.0
 	 */
-	static class ProvideResourceAsFile extends TestBase {
+	@Nested
+	class ProvideResourceAsFile extends TestBase {
 
 		/**
 		 * DOCME add JavaDoc for method test
