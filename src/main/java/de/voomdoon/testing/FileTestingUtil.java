@@ -1,4 +1,4 @@
-package de.voomdoon.testing.tests;
+package de.voomdoon.testing;
 
 import java.io.IOException;
 import java.io.InputStream;
