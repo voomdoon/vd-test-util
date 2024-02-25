@@ -1,4 +1,4 @@
-package de.voomdoon.testing.tests;
+package de.voomdoon.testing;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,6 +7,8 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import de.voomdoon.testing.tests.TestBase;
 
 /**
  * DOCME add JavaDoc for
