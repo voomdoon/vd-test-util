@@ -16,6 +16,8 @@
 
 	<properties>
 		<skipTestJar>false</skipTestJar>
+		
+		<junit.version>5.10.2</junit.version>
 	</properties>
 
 	<dependencies>
@@ -43,21 +45,16 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.10.2</version>
+			<version>${junit.version}</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter-engine</artifactId>
+			<version>${junit.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<!-- - - - - - external compile dependencies - - - - - -->
 		<!-- - - - - - - - - - - compile dependencies - - - - - - - - - - -->
-
-		<!-- + + + + + + + + + + test dependencies + + + + + + + + + + -->
-		<!-- + + + + + external test dependencies + + + + + -->
-		<dependency>
-			<groupId>org.junit.jupiter</groupId>
-			<artifactId>junit-jupiter-engine</artifactId>
-			<version>5.10.2</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- - - - - - external test dependencies - - - - - -->
-		<!-- - - - - - - - - - - test dependencies - - - - - - - - - - -->
 	</dependencies>
 </project>
