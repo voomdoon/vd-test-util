@@ -24,7 +24,7 @@ import org.junit.jupiter.api.Test;
  *
  * @since 0.1.0
  */
-public abstract class TestBaseTest {
+public class TestBaseTest {
 
 	/**
 	 * Test class for {@link TestBase#getTempDirectory()}.
