@@ -62,7 +62,7 @@ public abstract class TestBase {
 	 * @return {@link String}
 	 * @since 0.1.0
 	 */
-	protected String getTestMethodName() {// TESTME
+	protected String getTestMethodName() {
 		if (testMethodName == null) {
 			throw new IllegalStateException("Test method name not known => 'logTestStart' not called!");
 		}
