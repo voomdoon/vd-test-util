@@ -7,7 +7,10 @@ import java.io.IOException;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
+import de.voomdoon.testing.file.TempFile;
+import de.voomdoon.testing.file.TempFileExtension;
 import de.voomdoon.testing.tests.TestBase;
 
 /**
@@ -27,6 +30,7 @@ class FileTestingUtilTest {
 	 * @since 0.1.0
 	 */
 	@Nested
+	@ExtendWith(TempFileExtension.class)
 	class ProvideResourceAsFile extends TestBase {
 
 		/**
@@ -37,13 +41,12 @@ class FileTestingUtilTest {
 		 * @since 0.1.0
 		 */
 		@Test
-		void test() throws IOException {
+		void test(@TempFile File file) throws IOException {
 			logTestStart();
 
-			String fileName = getTempDirectory() + "/test.file";
-			FileTestingUtil.provideResourceAsFile("test.file", fileName);
+			FileTestingUtil.provideResourceAsFile("test.file", file.getAbsolutePath());
 
-			assertThat(new File(fileName)).isFile();
+			assertThat(file).isFile();
 		}
 	}
 }
