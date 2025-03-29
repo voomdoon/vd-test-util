@@ -3,6 +3,7 @@ package de.voomdoon.testing.file;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -14,6 +15,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.mockito.Mockito;
@@ -54,14 +56,16 @@ class TempFileExtensionTest {
 			TempFileExtension extension = new TempFileExtension();
 
 			ParameterContext parameterContext = mock(ParameterContext.class);
+
 			ExtensionContext extensionContext = mock(ExtensionContext.class);
 			ExtensionContext.Store store = mock(ExtensionContext.Store.class);
 			when(extensionContext.getStore(any())).thenReturn(store);
+			Mockito.doReturn(AfterEachTest.class).when(extensionContext).getRequiredTestClass();
 
 			List<Path> trackedFiles = new ArrayList<>();
 
-			when(store.get(Mockito.eq(TempFileExtension.STORE_KEY), Mockito.eq(List.class))).thenReturn(trackedFiles);
-			when(store.getOrComputeIfAbsent(Mockito.eq(TempFileExtension.STORE_KEY), any(), Mockito.eq(List.class)))
+			when(store.get(eq(TempFileExtension.STORE_KEY), eq(List.class))).thenReturn(trackedFiles);
+			when(store.getOrComputeIfAbsent(eq(TempFileExtension.STORE_KEY), any(), eq(List.class)))
 					.thenReturn(trackedFiles);
 
 			Parameter parameter = AfterEachTest.class.getDeclaredMethod("dummyMethod", File.class).getParameters()[0];
@@ -91,13 +95,14 @@ class TempFileExtensionTest {
 
 			ParameterContext parameterContext = mock(ParameterContext.class);
 			ExtensionContext extensionContext = mock(ExtensionContext.class);
+
 			ExtensionContext.Store store = mock(ExtensionContext.Store.class);
 			when(extensionContext.getStore(any())).thenReturn(store);
 
 			List<Path> trackedFiles = new ArrayList<>();
 
-			when(store.get(Mockito.eq(TempFileExtension.STORE_KEY), Mockito.eq(List.class))).thenReturn(trackedFiles);
-			when(store.getOrComputeIfAbsent(Mockito.eq(TempFileExtension.STORE_KEY), any(), Mockito.eq(List.class)))
+			when(store.get(eq(TempFileExtension.STORE_KEY), eq(List.class))).thenReturn(trackedFiles);
+			when(store.getOrComputeIfAbsent(eq(TempFileExtension.STORE_KEY), any(), eq(List.class)))
 					.thenReturn(trackedFiles);
 
 			Parameter parameter = AfterEachTest.class.getDeclaredMethod("dummyMethod", File.class).getParameters()[0];
@@ -106,6 +111,32 @@ class TempFileExtensionTest {
 			when(parameterContext.isAnnotated(TempFile.class)).thenReturn(true);
 
 			assertDoesNotThrow(() -> extension.afterEach(extensionContext));
+		}
+	}
+
+	/**
+	 * DOCME add JavaDoc for TempFileExtensionTest
+	 *
+	 * @author André Schulz
+	 *
+	 * @since 0.2.0
+	 */
+	@Nested
+	@ExtendWith(TempFileExtension.class)
+	class UseAllParameterAnotations extends TestBase {
+
+		/**
+		 * DOCME add JavaDoc for method test
+		 * 
+		 * @since 0.2.0
+		 */
+		@Test
+		void test(@TempFile File tempfile, @TempInputFile File tempInputFile) throws Exception {
+			logTestStart();
+
+			assertThat(tempfile).isNotNull();
+			assertThat(tempInputFile).isNotNull();
+			assertThat(tempfile).isNotEqualTo(tempInputFile);
 		}
 	}
 }

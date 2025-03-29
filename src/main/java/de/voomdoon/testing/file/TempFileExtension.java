@@ -92,7 +92,7 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		try {
 			Files.createDirectories(baseDir);
 		} catch (IOException e) {
-			throw new RuntimeException("Failed to create temp directory: " + baseDir, e);
+			throw new ParameterResolutionException("Failed to create temp directory: " + baseDir, e);
 		}
 
 		Class<?> type = parameterContext.getParameter().getType();
@@ -142,19 +142,35 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		Files.deleteIfExists(directory.toPath());
 	}
 
-	private Path getNext(ExtensionContext context, boolean input) {
-		List<Path> files = getOrCreateFiles(context, input);
+	/**
+	 * DOCME add JavaDoc for method getConfiguredExtension
+	 * 
+	 * @param extensionContext
+	 * @return
+	 * @since 0.2.0
+	 */
+	private String getConfiguredFileNameExtension(ExtensionContext extensionContext) {
+		WithTempInputFiles config = extensionContext.getRequiredTestClass().getAnnotation(WithTempInputFiles.class);
+
+		return (config != null) ? config.extension() : "tmp";
+	}
+
+	private Path getNext(ExtensionContext extensionContext, boolean input) {
+		List<Path> files = getOrCreateFiles(extensionContext, input);
 		Path dir = input ? tempInputDirectory : tempDirectory;
 		String prefix = input ? "input" : "file";
+		String fileNameExtension = getConfiguredFileNameExtension(extensionContext);
 
 		Path result;
 		int i = 1;
 
 		do {
-			result = dir.resolve(String.format("%s_%d.tmp", prefix, i++));
+			String fileName = String.format("%s_%d.%s", prefix, i++, fileNameExtension);
+			result = dir.resolve(fileName);
 		} while (files.contains(result));
 
 		files.add(result);
+
 		return result;
 	}
 
