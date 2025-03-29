@@ -14,10 +14,39 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 /**
- * DOCME add JavaDoc for
+ * JUnit 5 extension that injects temporary file instances into test method parameters annotated with {@link TempFile}.
+ * Each injected file is unique and located in a temporary test directory, which is cleaned up after the test completes.
+ *
+ * <p>
+ * To use this extension, annotate your test class with {@code @ExtendWith(TempFileExtension.class)} and annotate test
+ * method parameters with {@code @TempFile}.
+ * </p>
+ *
+ * 
+ * <p>
+ * Example usage:
+ * </p>
+ * 
+ * <pre>
+ * &#64;ExtendWith(TempFileExtension.class)
+ * class MyTest {
+ *
+ * 	&#64;Test
+ * 	void testWithTempFile(@TempFile File tempFile) {
+ * 		// use tempFile here
+ * 	}
+ * }
+ * </pre>
+ *
+ * <p>
+ * The temporary directory used is {@code target/test-temp}, and all files created during the test are automatically
+ * deleted afterward.
+ * </p>
+ *
+ * @see TempFile
  *
  * @author André Schulz
- *
+ * 
  * @since 0.2.0
  */
 public class TempFileExtension implements ParameterResolver, AfterEachCallback {
