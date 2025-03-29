@@ -6,7 +6,6 @@ import static org.assertj.core.api.Assumptions.assumeThat;
 import java.io.File;
 import java.nio.file.Path;
 
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -19,7 +18,6 @@ import de.voomdoon.testing.tests.TestBase;
  *
  * @since 0.2.0
  */
-@Nested
 @ExtendWith(TempFileExtension.class)
 class TempFileTest extends TestBase {
 
