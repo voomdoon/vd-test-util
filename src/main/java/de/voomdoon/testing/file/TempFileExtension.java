@@ -46,7 +46,7 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	@Override
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		Path tempFile = tempDirectory.resolve("file.tmp");
+		Path tempFile = getNext(extensionContext);
 
 		try {
 			Files.createDirectories(tempDirectory);
@@ -54,8 +54,6 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 			// TODO implement error handling
 			throw new RuntimeException("Error at 'resolveParameter': " + e.getMessage(), e);
 		}
-
-		getOrCreateTempFiles(extensionContext).add(tempFile);
 
 		if (parameterContext.getParameter().getType().equals(File.class)) {
 			return tempFile.toFile();
@@ -79,9 +77,8 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method deleteDirectory
-	 * 
 	 * @param directory
+	 *            {@link File}
 	 * @since 0.2.0
 	 */
 	private void deleteDirectory(File directory) throws IOException {
@@ -97,10 +94,31 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method getOrCreateTempFiles
-	 * 
 	 * @param extensionContext
-	 * @return
+	 *            {@link ExtensionContext}
+	 * 
+	 * @return {@link Path}
+	 * @since 0.2.0
+	 */
+	private Path getNext(ExtensionContext extensionContext) {
+		List<Path> tempFiles = getOrCreateTempFiles(extensionContext);
+		Path result;
+		int i = 1;
+
+		do {
+			String name = String.format("file_%d.tmp", i++);
+			result = tempDirectory.resolve(name);
+		} while (tempFiles.contains(result));
+
+		tempFiles.add(result);
+
+		return result;
+	}
+
+	/**
+	 * @param extensionContext
+	 *            {@link ExtensionContext}
+	 * @return {@link List} of {@link Path}
 	 * @since 0.2.0
 	 */
 	@SuppressWarnings("unchecked")
@@ -109,10 +127,9 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method getStore
-	 * 
 	 * @param context
-	 * @return
+	 *            {@link ExtensionContext}
+	 * @return {@link ExtensionContext.Store}
 	 * @since 0.2.0
 	 */
 	private ExtensionContext.Store getStore(ExtensionContext context) {

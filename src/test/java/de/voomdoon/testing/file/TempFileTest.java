@@ -36,8 +36,6 @@ class TempFileTest extends TestBase {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method test_File_canBeCreated
-	 * 
 	 * @since 0.2.0
 	 */
 	@Test
@@ -50,8 +48,6 @@ class TempFileTest extends TestBase {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method test
-	 * 
 	 * @since 0.2.0
 	 */
 	@Test
@@ -61,6 +57,16 @@ class TempFileTest extends TestBase {
 		assumeThat(file).isNotNull();
 
 		assertThat(file).doesNotExist();
+	}
+
+	/**
+	 * @since 0.2.0
+	 */
+	@Test
+	void test_File_twoAreDifferent(@TempFile File file1, @TempFile File file2) throws Exception {
+		logTestStart();
+
+		assertThat(file1).isNotEqualTo(file2);
 	}
 
 	/**
