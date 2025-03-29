@@ -111,15 +111,17 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	 * @since 0.2.0
 	 */
 	private void deleteDirectory(File directory) throws IOException {
-		for (File file : directory.listFiles()) {
-			if (file.isDirectory()) {
-				deleteDirectory(file);
-			} else {
-				Files.delete(file.toPath());
+		if (directory.listFiles() != null) {
+			for (File file : directory.listFiles()) {
+				if (file.isDirectory()) {
+					deleteDirectory(file);
+				} else {
+					Files.delete(file.toPath());
+				}
 			}
 		}
 
-		Files.delete(directory.toPath());
+		Files.deleteIfExists(directory.toPath());
 	}
 
 	/**

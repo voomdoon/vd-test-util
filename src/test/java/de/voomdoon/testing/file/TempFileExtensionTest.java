@@ -1,6 +1,7 @@
 package de.voomdoon.testing.file;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -75,6 +76,36 @@ class TempFileExtensionTest {
 			extension.afterEach(extensionContext);
 
 			assertThat(file).doesNotExist();
+		}
+
+		/**
+		 * DOCME add JavaDoc for method test_File_isDeleted
+		 * 
+		 * @since 0.2.0
+		 */
+		@Test
+		void test_noFile_passes() throws Exception {
+			logTestStart();
+
+			TempFileExtension extension = new TempFileExtension();
+
+			ParameterContext parameterContext = mock(ParameterContext.class);
+			ExtensionContext extensionContext = mock(ExtensionContext.class);
+			ExtensionContext.Store store = mock(ExtensionContext.Store.class);
+			when(extensionContext.getStore(any())).thenReturn(store);
+
+			List<Path> trackedFiles = new ArrayList<>();
+
+			when(store.get(Mockito.eq(TempFileExtension.STORE_KEY), Mockito.eq(List.class))).thenReturn(trackedFiles);
+			when(store.getOrComputeIfAbsent(Mockito.eq(TempFileExtension.STORE_KEY), any(), Mockito.eq(List.class)))
+					.thenReturn(trackedFiles);
+
+			Parameter parameter = AfterEachTest.class.getDeclaredMethod("dummyMethod", File.class).getParameters()[0];
+
+			when(parameterContext.getParameter()).thenReturn(parameter);
+			when(parameterContext.isAnnotated(TempFile.class)).thenReturn(true);
+
+			assertDoesNotThrow(() -> extension.afterEach(extensionContext));
 		}
 	}
 }
