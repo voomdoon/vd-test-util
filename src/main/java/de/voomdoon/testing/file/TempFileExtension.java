@@ -59,7 +59,17 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	/**
 	 * @since 0.2.0
 	 */
+	public static final String STORE_KEY_INPUT = STORE_KEY + "-input";
+
+	/**
+	 * @since 0.2.0
+	 */
 	private Path tempDirectory = Path.of("target", "test-temp");
+
+	/**
+	 * @since 0.2.0
+	 */
+	private Path tempInputDirectory = tempDirectory.resolve("input");
 
 	/**
 	 * @since 0.2.0
@@ -75,23 +85,25 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	@Override
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		Path tempFile = getNext(extensionContext);
+		boolean isInput = parameterContext.isAnnotated(TempInputFile.class);
+		Path baseDir = isInput ? tempInputDirectory : tempDirectory;
+		Path file = getNext(extensionContext, isInput);
 
 		try {
-			Files.createDirectories(tempDirectory);
+			Files.createDirectories(baseDir);
 		} catch (IOException e) {
-			// TODO implement error handling
-			throw new RuntimeException("Error at 'resolveParameter': " + e.getMessage(), e);
+			throw new RuntimeException("Failed to create temp directory: " + baseDir, e);
 		}
 
-		if (parameterContext.getParameter().getType().equals(File.class)) {
-			return tempFile.toFile();
-		} else if (parameterContext.getParameter().getType().equals(Path.class)) {
-			return tempFile;
-		} else {
-			// TODO implement resolveParameter
-			throw new UnsupportedOperationException("Method 'resolveParameter' not implemented yet");
+		Class<?> type = parameterContext.getParameter().getType();
+
+		if (File.class.equals(type)) {
+			return file.toFile();
+		} else if (Path.class.equals(type)) {
+			return file;
 		}
+
+		throw new ParameterResolutionException("Unsupported parameter type: " + type);
 	}
 
 	/**
@@ -100,9 +112,15 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	@Override
 	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		return parameterContext.isAnnotated(TempFile.class)
-				&& (File.class.isAssignableFrom(parameterContext.getParameter().getType())
-						|| Path.class.isAssignableFrom(parameterContext.getParameter().getType()));
+		boolean isSupportedType = //
+				File.class.isAssignableFrom(parameterContext.getParameter().getType())
+						|| Path.class.isAssignableFrom(parameterContext.getParameter().getType());
+
+		boolean isAnnotated = //
+				parameterContext.isAnnotated(TempFile.class) //
+						|| parameterContext.isAnnotated(TempInputFile.class);
+
+		return isSupportedType && isAnnotated;
 	}
 
 	/**
@@ -124,37 +142,27 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		Files.deleteIfExists(directory.toPath());
 	}
 
-	/**
-	 * @param extensionContext
-	 *            {@link ExtensionContext}
-	 * 
-	 * @return {@link Path}
-	 * @since 0.2.0
-	 */
-	private Path getNext(ExtensionContext extensionContext) {
-		List<Path> tempFiles = getOrCreateTempFiles(extensionContext);
+	private Path getNext(ExtensionContext context, boolean input) {
+		List<Path> files = getOrCreateFiles(context, input);
+		Path dir = input ? tempInputDirectory : tempDirectory;
+		String prefix = input ? "input" : "file";
+
 		Path result;
 		int i = 1;
 
 		do {
-			String name = String.format("file_%d.tmp", i++);
-			result = tempDirectory.resolve(name);
-		} while (tempFiles.contains(result));
+			result = dir.resolve(String.format("%s_%d.tmp", prefix, i++));
+		} while (files.contains(result));
 
-		tempFiles.add(result);
-
+		files.add(result);
 		return result;
 	}
 
-	/**
-	 * @param extensionContext
-	 *            {@link ExtensionContext}
-	 * @return {@link List} of {@link Path}
-	 * @since 0.2.0
-	 */
 	@SuppressWarnings("unchecked")
-	private List<Path> getOrCreateTempFiles(ExtensionContext extensionContext) {
-		return getStore(extensionContext).getOrComputeIfAbsent(STORE_KEY, k -> new ArrayList<Path>(), List.class);
+	private List<Path> getOrCreateFiles(ExtensionContext context, boolean input) {
+		String key = input ? STORE_KEY_INPUT : STORE_KEY;
+
+		return getStore(context).getOrComputeIfAbsent(key, k -> new ArrayList<Path>(), List.class);
 	}
 
 	/**
