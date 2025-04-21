@@ -115,8 +115,6 @@ class TempFileExtensionTest {
 	}
 
 	/**
-	 * DOCME add JavaDoc for TempFileExtensionTest
-	 *
 	 * @author André Schulz
 	 *
 	 * @since 0.2.0
@@ -126,17 +124,20 @@ class TempFileExtensionTest {
 	class UseAllParameterAnotations extends TestBase {
 
 		/**
-		 * DOCME add JavaDoc for method test
-		 * 
 		 * @since 0.2.0
 		 */
 		@Test
-		void test(@TempFile File tempfile, @TempInputFile File tempInputFile) throws Exception {
+		void test(@TempFile File tempfile, @TempInputFile File tempInputFile, @TempOutputFile File tempOutputFile)
+				throws Exception {
 			logTestStart();
 
 			assertThat(tempfile).isNotNull();
+
 			assertThat(tempInputFile).isNotNull();
-			assertThat(tempfile).isNotEqualTo(tempInputFile);
+			assertThat(tempInputFile).isNotEqualTo(tempfile);
+
+			assertThat(tempOutputFile).isNotNull();
+			assertThat(tempOutputFile).isNotEqualTo(tempfile);
 		}
 	}
 }

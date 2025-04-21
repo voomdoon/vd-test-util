@@ -5,7 +5,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -52,14 +54,38 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 
 	/**
+	 *
+	 * @author André Schulz
+	 *
 	 * @since 0.2.0
 	 */
+	private enum FileType {
+
+		/**
+		 * @since 0.2.0
+		 */
+		DEFAULT,
+
+		/**
+		 * @since 0.2.0
+		 */
+		INPUT,
+
+		/**
+		 * @since 0.2.0
+		 */
+		OUTPUT,
+
+		;
+	}
+
 	public static final String STORE_KEY = "temp-files";
 
 	/**
 	 * @since 0.2.0
 	 */
-	public static final String STORE_KEY_INPUT = STORE_KEY + "-input";
+	private static final Map<FileType, String> STORE_KEYS = Map.of(FileType.DEFAULT, STORE_KEY, FileType.INPUT,
+			STORE_KEY + "/input", FileType.OUTPUT, STORE_KEY + "/output");
 
 	/**
 	 * @since 0.2.0
@@ -69,7 +95,12 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	/**
 	 * @since 0.2.0
 	 */
-	private Path tempInputDirectory = tempDirectory.resolve("input");
+	private Path tempInputDirectory = tempDirectory.resolve("input/0");
+
+	/**
+	 * @since 0.2.0
+	 */
+	private Path tempOutputDirectory = tempDirectory.resolve("output/0");
 
 	/**
 	 * @since 0.2.0
@@ -85,9 +116,10 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	@Override
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		boolean isInput = parameterContext.isAnnotated(TempInputFile.class);
-		Path baseDir = isInput ? tempInputDirectory : tempDirectory;
-		Path file = getNext(extensionContext, isInput);
+		FileType fileType = getFileType(parameterContext);
+		Path file = getNext(extensionContext, fileType);
+
+		Path baseDir = getDirectoryFor(fileType);
 
 		try {
 			Files.createDirectories(baseDir);
@@ -101,6 +133,8 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 			return file.toFile();
 		} else if (Path.class.equals(type)) {
 			return file;
+		} else if (String.class.equals(type)) {
+			return file.toString();
 		}
 
 		throw new ParameterResolutionException("Unsupported parameter type: " + type);
@@ -112,15 +146,7 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	@Override
 	public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
-		boolean isSupportedType = //
-				File.class.isAssignableFrom(parameterContext.getParameter().getType())
-						|| Path.class.isAssignableFrom(parameterContext.getParameter().getType());
-
-		boolean isAnnotated = //
-				parameterContext.isAnnotated(TempFile.class) //
-						|| parameterContext.isAnnotated(TempInputFile.class);
-
-		return isSupportedType && isAnnotated;
+		return supportsType(parameterContext) && supportsAnnotation(parameterContext);
 	}
 
 	/**
@@ -143,29 +169,84 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method getConfiguredExtension
-	 * 
-	 * @param extensionContext
-	 * @return
+	 * @param context
+	 *            {@link ExtensionContext}
+	 * @param type
+	 *            {@link FileType}
+	 * @return {@link String}
 	 * @since 0.2.0
 	 */
-	private String getConfiguredFileNameExtension(ExtensionContext extensionContext) {
-		WithTempInputFiles config = extensionContext.getRequiredTestClass().getAnnotation(WithTempInputFiles.class);
+	private String getConfiguredFileNameExtension(ExtensionContext context, FileType type) {
+		Class<?> testClass = context.getRequiredTestClass();
 
-		return (config != null) ? config.extension() : "tmp";
+		return switch (type) {
+			case INPUT -> {
+				WithTempInputFiles config = testClass.getAnnotation(WithTempInputFiles.class);
+				yield (config != null) ? config.extension() : "tmp";
+			}
+			case OUTPUT -> {
+				WithTempOutputFiles config = testClass.getAnnotation(WithTempOutputFiles.class);
+				yield (config != null) ? config.extension() : "tmp";
+			}
+			default -> "tmp";
+		};
 	}
 
-	private Path getNext(ExtensionContext extensionContext, boolean input) {
-		List<Path> files = getOrCreateFiles(extensionContext, input);
-		Path dir = input ? tempInputDirectory : tempDirectory;
-		String prefix = input ? "input" : "file";
-		String fileNameExtension = getConfiguredFileNameExtension(extensionContext);
+	/**
+	 * @param type
+	 *            {@link FileType}
+	 * @return {@link Path}
+	 * @since 0.2.0
+	 */
+	private Path getDirectoryFor(FileType type) {
+		return switch (type) {
+			case INPUT -> tempInputDirectory;
+			case OUTPUT -> tempOutputDirectory;
+			default -> tempDirectory;
+		};
+	}
+
+	/**
+	 * @param parameterContext
+	 *            {@link ParameterContext}
+	 * @return {@link FileType}
+	 * @since 0.2.0
+	 */
+	private FileType getFileType(ParameterContext parameterContext) {
+		if (parameterContext.isAnnotated(TempInputFile.class)) {
+			return FileType.INPUT;
+		} else if (parameterContext.isAnnotated(TempOutputFile.class)) {
+			return FileType.OUTPUT;
+		}
+
+		return FileType.DEFAULT;
+	}
+
+	/**
+	 * @param context
+	 *            {@link ExtensionContext}
+	 * @param type
+	 *            {@link FileType}
+	 * @return {@link Path}
+	 * @since 0.2.0
+	 */
+	private Path getNext(ExtensionContext context, FileType type) {
+		List<Path> files = getOrCreateFiles(context, type);
+		Path dir = getDirectoryFor(type);
+
+		String prefix = switch (type) {
+			case INPUT -> "input";
+			case OUTPUT -> "output";
+			default -> "file";
+		};
+
+		String extension = getConfiguredFileNameExtension(context, type);
 
 		Path result;
 		int i = 1;
 
 		do {
-			String fileName = String.format("%s_%d.%s", prefix, i++, fileNameExtension);
+			String fileName = String.format("%s_%d.%s", prefix, i++, extension);
 			result = dir.resolve(fileName);
 		} while (files.contains(result));
 
@@ -174,11 +255,24 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		return result;
 	}
 
-	@SuppressWarnings("unchecked")
-	private List<Path> getOrCreateFiles(ExtensionContext context, boolean input) {
-		String key = input ? STORE_KEY_INPUT : STORE_KEY;
+	/**
+	 * DOCME add JavaDoc for method getOrCreateFiles
+	 * 
+	 * @param context
+	 *            {@link ExtensionContext}
+	 * @param type
+	 *            {@link FileType}
+	 * @return {@link List} of all files as {@link Path}
+	 * @since 0.2.0
+	 */
+	private List<Path> getOrCreateFiles(ExtensionContext context, FileType type) {
+		String key = STORE_KEYS.get(type);
 
-		return getStore(context).getOrComputeIfAbsent(key, k -> new ArrayList<Path>(), List.class);
+		@SuppressWarnings("unchecked")
+		List<Path> result = getStore(context).getOrComputeIfAbsent(key,
+				k -> Collections.synchronizedList(new ArrayList<>()), List.class);
+
+		return result;
 	}
 
 	/**
@@ -189,5 +283,33 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	 */
 	private ExtensionContext.Store getStore(ExtensionContext context) {
 		return context.getStore(ExtensionContext.Namespace.create(getClass(), context));
+	}
+
+	/**
+	 * @param parameterContext
+	 *            {@link ParameterContext}
+	 * @return
+	 * @since 0.2.0
+	 */
+	private boolean supportsAnnotation(ParameterContext parameterContext) {
+		boolean isAnnotated = //
+				parameterContext.isAnnotated(TempFile.class) //
+						|| parameterContext.isAnnotated(TempInputFile.class)//
+						|| parameterContext.isAnnotated(TempOutputFile.class);
+		return isAnnotated;
+	}
+
+	/**
+	 * @param parameterContext
+	 *            {@link ParameterContext}
+	 * @return
+	 * @since 0.2.0
+	 */
+	private boolean supportsType(ParameterContext parameterContext) {
+		boolean isSupportedType = //
+				File.class.isAssignableFrom(parameterContext.getParameter().getType())
+						|| Path.class.isAssignableFrom(parameterContext.getParameter().getType())
+						|| String.class.isAssignableFrom(parameterContext.getParameter().getType());
+		return isSupportedType;
 	}
 }

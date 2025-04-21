@@ -1,0 +1,26 @@
+package de.voomdoon.testing.file;
+
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Configuration annotation for tests using {@link TempOutputFile}. Allows setting the file extension for output files.
+ * 
+ * @author André Schulz
+ *
+ * @since 0.2.0
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
+public @interface WithTempOutputFiles {
+
+	/**
+	 * File extension to use for {@link TempOutputFile}s.
+	 * 
+	 * @return the file extension (default is "tmp")
+	 * @since 0.2.0
+	 */
+	String extension() default "tmp";
+}

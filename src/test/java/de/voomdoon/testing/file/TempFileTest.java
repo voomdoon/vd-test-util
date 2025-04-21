@@ -74,8 +74,16 @@ class TempFileTest extends TestBase {
 	void test_Path(@TempFile Path path) throws Exception {
 		logTestStart();
 
-		logger.debug("path: " + path);
-
 		assertThat(path).isNotNull();
+	}
+
+	/**
+	 * @since 0.2.0
+	 */
+	@Test
+	void test_Path(@TempFile String string) throws Exception {
+		logTestStart();
+
+		assertThat(string).endsWith(".tmp");
 	}
 }
