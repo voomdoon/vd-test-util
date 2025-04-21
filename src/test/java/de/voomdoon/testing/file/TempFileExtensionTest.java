@@ -64,8 +64,8 @@ class TempFileExtensionTest {
 
 			List<Path> trackedFiles = new ArrayList<>();
 
-			when(store.get(eq(TempFileExtension.STORE_KEY), eq(List.class))).thenReturn(trackedFiles);
-			when(store.getOrComputeIfAbsent(eq(TempFileExtension.STORE_KEY), any(), eq(List.class)))
+			when(store.get(eq(TempFileExtension.STORE_KEY_ROOT), eq(List.class))).thenReturn(trackedFiles);
+			when(store.getOrComputeIfAbsent(eq(TempFileExtension.STORE_KEY_ROOT), any(), eq(List.class)))
 					.thenReturn(trackedFiles);
 
 			Parameter parameter = AfterEachTest.class.getDeclaredMethod("dummyMethod", File.class).getParameters()[0];
@@ -101,8 +101,8 @@ class TempFileExtensionTest {
 
 			List<Path> trackedFiles = new ArrayList<>();
 
-			when(store.get(eq(TempFileExtension.STORE_KEY), eq(List.class))).thenReturn(trackedFiles);
-			when(store.getOrComputeIfAbsent(eq(TempFileExtension.STORE_KEY), any(), eq(List.class)))
+			when(store.get(eq(TempFileExtension.STORE_KEY_ROOT), eq(List.class))).thenReturn(trackedFiles);
+			when(store.getOrComputeIfAbsent(eq(TempFileExtension.STORE_KEY_ROOT), any(), eq(List.class)))
 					.thenReturn(trackedFiles);
 
 			Parameter parameter = AfterEachTest.class.getDeclaredMethod("dummyMethod", File.class).getParameters()[0];

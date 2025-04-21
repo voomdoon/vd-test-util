@@ -2,9 +2,11 @@ package de.voomdoon.testing.file;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +46,31 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * The temporary directory used is {@code target/test-temp}, and all files created during the test are automatically
  * deleted afterward.
  * </p>
+ * 
+ * Directory structure:
+ * 
+ * <pre>
+ * target
+ *  └── test-temp
+ *      ├── file_1.tmp
+ *      ├── file_2.tmp
+ *      ├── input
+ *      │   │── 0
+ *      │   │   ├── input_1.tmp
+ *      │   │   ├── input_2.tmp
+ *      │   │   └── ...
+ *      │   ├── directory_1
+ *      │   ├── directory_2
+ *      │   └── ...
+ *      └── output
+ *          ├── 0
+ *          │   ├── output_1.tmp
+ *          │   ├── output_2.tmp
+ *          │	└── ...
+ *          ├── directory_1
+ *          ├── directory_2
+ *          └── ...
+ * </pre>
  *
  * @see TempFile
  *
@@ -74,18 +101,32 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		/**
 		 * @since 0.2.0
 		 */
+		INPUT_DIRECTORY,
+
+		/**
+		 * @since 0.2.0
+		 */
 		OUTPUT,
+
+		/**
+		 * @since 0.2.0
+		 */
+		OUTPUT_DIRECTORY,
 
 		;
 	}
 
-	public static final String STORE_KEY = "temp-files";
+	public static final String STORE_KEY_ROOT = "temp-files";
 
 	/**
 	 * @since 0.2.0
 	 */
-	private static final Map<FileType, String> STORE_KEYS = Map.of(FileType.DEFAULT, STORE_KEY, FileType.INPUT,
-			STORE_KEY + "/input", FileType.OUTPUT, STORE_KEY + "/output");
+	private static final Map<FileType, String> STORE_KEYS = Map.of(//
+			FileType.DEFAULT, STORE_KEY_ROOT, //
+			FileType.INPUT, STORE_KEY_ROOT + "/input", //
+			FileType.INPUT_DIRECTORY, STORE_KEY_ROOT + "/input-directory", //
+			FileType.OUTPUT, STORE_KEY_ROOT + "/output", //
+			FileType.OUTPUT_DIRECTORY, STORE_KEY_ROOT + "/output-directory");
 
 	/**
 	 * @since 0.2.0
@@ -95,12 +136,12 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	/**
 	 * @since 0.2.0
 	 */
-	private Path tempInputDirectory = tempDirectory.resolve("input/0");
+	private Path tempInputDirectory = tempDirectory.resolve("input/common");
 
 	/**
 	 * @since 0.2.0
 	 */
-	private Path tempOutputDirectory = tempDirectory.resolve("output/0");
+	private Path tempOutputDirectory = tempDirectory.resolve("output/common");
 
 	/**
 	 * @since 0.2.0
@@ -118,6 +159,8 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 			throws ParameterResolutionException {
 		FileType fileType = getFileType(parameterContext);
 		Path file = getNext(extensionContext, fileType);
+
+		System.out.println("result: " + file);
 
 		Path baseDir = getDirectoryFor(fileType);
 
@@ -215,11 +258,20 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	private FileType getFileType(ParameterContext parameterContext) {
 		if (parameterContext.isAnnotated(TempInputFile.class)) {
 			return FileType.INPUT;
+		} else if (parameterContext.isAnnotated(TempInputDirectory.class)) {
+			return FileType.INPUT_DIRECTORY;
 		} else if (parameterContext.isAnnotated(TempOutputFile.class)) {
 			return FileType.OUTPUT;
+		} else if (parameterContext.isAnnotated(TempOutputDirectory.class)) {
+			return FileType.OUTPUT_DIRECTORY;
+		} else if (parameterContext.isAnnotated(TempFile.class)) {
+			return FileType.DEFAULT;
+		} else {
+			// TODO implement getFileType
+			throw new UnsupportedOperationException("Method 'getFileType' not implemented for "
+					+ Arrays.stream(parameterContext.getAnnotatedElement().getAnnotations())
+							.map(Annotation::annotationType).toList());
 		}
-
-		return FileType.DEFAULT;
 	}
 
 	/**
@@ -236,17 +288,20 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 
 		String prefix = switch (type) {
 			case INPUT -> "input";
+			case INPUT_DIRECTORY -> "input/directory";
 			case OUTPUT -> "output";
-			default -> "file";
+			case OUTPUT_DIRECTORY -> "output/directory";
+			case DEFAULT -> "file";
+			default -> throw new UnsupportedOperationException("Method 'getNext' not implemented yet");
 		};
 
-		String extension = getConfiguredFileNameExtension(context, type);
+		String suffix = isFile(type) ? "." + getConfiguredFileNameExtension(context, type) : "";
 
 		Path result;
 		int i = 1;
 
 		do {
-			String fileName = String.format("%s_%d.%s", prefix, i++, extension);
+			String fileName = String.format("%s_%d%s", prefix, i++, suffix);
 			result = dir.resolve(fileName);
 		} while (files.contains(result));
 
@@ -286,6 +341,20 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
+	 * DOCME add JavaDoc for method isFile
+	 * 
+	 * @param type
+	 * @return
+	 * @since 0.2.0
+	 */
+	private boolean isFile(FileType type) {
+		return switch (type) {
+			case DEFAULT, INPUT, OUTPUT -> true;
+			case INPUT_DIRECTORY, OUTPUT_DIRECTORY -> false;
+		};
+	}
+
+	/**
 	 * @param parameterContext
 	 *            {@link ParameterContext}
 	 * @return
@@ -295,7 +364,9 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		boolean isAnnotated = //
 				parameterContext.isAnnotated(TempFile.class) //
 						|| parameterContext.isAnnotated(TempInputFile.class)//
-						|| parameterContext.isAnnotated(TempOutputFile.class);
+						|| parameterContext.isAnnotated(TempInputDirectory.class)//
+						|| parameterContext.isAnnotated(TempOutputFile.class)//
+						|| parameterContext.isAnnotated(TempOutputDirectory.class);
 		return isAnnotated;
 	}
 
