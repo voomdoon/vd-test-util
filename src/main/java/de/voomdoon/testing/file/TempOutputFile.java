@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for test parameters that should be injected with a temporary output file.
+ * Injects a temporary output file. See {@link TempFileExtension} for details.
  * 
  * @author André Schulz
  * 

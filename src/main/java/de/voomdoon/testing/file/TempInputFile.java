@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * DOCME add JavaDoc for
+ * Injects a temporary input file. See {@link TempFileExtension} for details.
  *
  * @author André Schulz
  *

@@ -20,6 +20,18 @@ import de.voomdoon.testing.tests.TestBase;
 class TempInputDirectoryTest extends TestBase {
 
 	/**
+	 * DOCME add JavaDoc for method test_isNotCreated
+	 * 
+	 * @since DOCME add inception version number
+	 */
+	@Test
+	void test_isNotCreated(@TempInputDirectory File directory) throws Exception {
+		logTestStart();
+
+		assertThat(directory).doesNotExist();
+	}
+
+	/**
 	 * @param directory
 	 * @since 0.2.0
 	 */

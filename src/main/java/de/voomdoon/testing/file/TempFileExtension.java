@@ -18,17 +18,41 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 /**
- * JUnit 5 extension that injects temporary file instances into test method parameters annotated with {@link TempFile}.
- * Each injected file is unique and located in a temporary test directory, which is cleaned up after the test completes.
+ * JUnit 5 extension that injects temporary file or directory instances into test method parameters.
  *
- * <p>
- * To use this extension, annotate your test class with {@code @ExtendWith(TempFileExtension.class)} and annotate test
- * method parameters with {@code @TempFile}.
- * </p>
- *
+ * Behavior:
+ * <ul>
+ * <li>Injected files and directories are <strong>not</strong> created automatically. Only the parent directories are
+ * created.</li>
+ * <li>All resources are unique per injection and isolated to the current test method.</li>
+ * <li>All resources are automatically deleted after the test completes.</li>
+ * <li>If a file or directory cannot be deleted, an exception is thrown.</li>
+ * <li>Cleanup may not occur if a test fails abnormally or the JVM is forcibly terminated.</li>
+ * <li>Each parameter must be annotated with exactly one supported annotation.</li>
+ * </ul>
  * 
  * <p>
- * Example usage:
+ * <strong>Supported annotations:</strong>
+ * </p>
+ * <ul>
+ * <li>{@link TempFile}</li>
+ * <li>{@link TempInputFile}</li>
+ * <li>{@link TempInputDirectory}</li>
+ * <li>{@link TempOutputFile}</li>
+ * <li>{@link TempOutputDirectory}</li>
+ * </ul>
+ * 
+ * <p>
+ * <strong>Supported parameter types:</strong>
+ * </p>
+ * <ul>
+ * <li>{@link java.io.File}</li>
+ * <li>{@link java.nio.file.Path}</li>
+ * <li>{@link java.lang.String}</li>
+ * </ul>
+ * 
+ * <p>
+ * <strong>Example usage:</strong>
  * </p>
  * 
  * <pre>
@@ -42,37 +66,30 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * }
  * </pre>
  *
- * <p>
- * The temporary directory used is {@code target/test-temp}, and all files created during the test are automatically
- * deleted afterward.
- * </p>
- * 
  * Directory structure:
  * 
  * <pre>
  * target
  *  └── test-temp
- *      ├── file_1.tmp
+ *      ├── file_1.tmp (by TempFile)
  *      ├── file_2.tmp
  *      ├── input
- *      │   │── 0
- *      │   │   ├── input_1.tmp
+ *      │   ├── 0
+ *      │   │   ├── input_1.tmp (by TempInputFile)
  *      │   │   ├── input_2.tmp
  *      │   │   └── ...
- *      │   ├── directory_1
+ *      │   ├── directory_1 (by TempInputDirectory)
  *      │   ├── directory_2
  *      │   └── ...
  *      └── output
  *          ├── 0
- *          │   ├── output_1.tmp
+ *          │   ├── output_1.tmp (by TempOutputFile)
  *          │   ├── output_2.tmp
  *          │	└── ...
- *          ├── directory_1
+ *          ├── directory_1 (by TempOutputDirectory)
  *          ├── directory_2
  *          └── ...
  * </pre>
- *
- * @see TempFile
  *
  * @author André Schulz
  * 

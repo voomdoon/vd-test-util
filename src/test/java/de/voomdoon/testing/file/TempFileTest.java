@@ -49,7 +49,7 @@ class TempFileTest extends TestBase {
 	 * @since 0.2.0
 	 */
 	@Test
-	void test_File_doesNotExist(@TempFile File file) throws Exception {
+	void test_File_isNotCreated(@TempFile File file) throws Exception {
 		logTestStart();
 
 		assumeThat(file).isNotNull();
