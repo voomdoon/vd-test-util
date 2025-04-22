@@ -3,11 +3,18 @@ package de.voomdoon.testing.tests;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.NoSuchElementException;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import de.voomdoon.logging.LogEvent;
+import de.voomdoon.logging.LogEventHandler;
+import de.voomdoon.logging.LogLevel;
+import de.voomdoon.logging.LogManager;
 
 /**
  * Test class for {@link TestBase}.
@@ -69,7 +76,32 @@ public class TestBaseTest {
 	 * @since 0.1.0
 	 */
 	@Nested
-	class LogTestStartTest extends TestBase {
+	class LogTestStartTest extends TestBase implements LogEventHandler {
+
+		/**
+		 * @since 0.2.0
+		 */
+		private List<LogEvent> logEvents = new ArrayList<>();
+
+		/**
+		 * @since DOCME add inception version number
+		 */
+		@Override
+		public void handleLogEvent(LogEvent logEvent) {
+			logEvents.add(logEvent);
+		}
+
+		/**
+		 * @since DOCME add inception version number
+		 */
+		@AfterEach
+		void afterEach_removeLogEventHandler() {
+			try {
+				LogManager.removeLogEventHandler(this);
+			} catch (NoSuchElementException e) {
+				// ignore
+			}
+		}
 
 		/**
 		 * @throws Exception
@@ -79,14 +111,14 @@ public class TestBaseTest {
 		void test_someName() throws Exception {
 			logTestStart();
 
-			new MyTestBase().logTestStart();
-
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			System.setOut(new PrintStream(out));
+			LogManager.addLogEventHandler(this);
 
 			new MyTestBase().logTestStart();
 
-			assertThat(new String(out.toByteArray())).contains("test_someName");
+			List<LogEvent> infoEvents = logEvents.stream().filter(e -> e.getLevel() == LogLevel.INFO).toList();
+
+			assertThat(infoEvents).hasSize(1);
+			assertThat(infoEvents.get(0).getMessage()).isEqualTo("running test 'test_someName'...");
 		}
 	}
 
