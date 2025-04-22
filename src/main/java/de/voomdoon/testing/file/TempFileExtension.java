@@ -67,7 +67,8 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * </pre>
  *
  * <p>
- * Special behavior can be configured using the following annotations:
+ * <strong>Special behavior (like file name extensions or directory creation) can be configured using the following
+ * annotations:</strong>
  * <ul>
  * <li>{@link WithTempInputFiles}</li>
  * <li>{@link WithTempInputDirectories}</li>
@@ -200,27 +201,9 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		FileType fileType = getFileType(parameterContext);
 		Path file = getNext(extensionContext, fileType);
 
-		maybeCreateDirectory(extensionContext, file, fileType);
+		maybeCreateDirectories(extensionContext, fileType, file);
 
-		Path baseDir = getDirectoryFor(fileType);
-
-		try {
-			Files.createDirectories(baseDir);
-		} catch (IOException e) {
-			throw new ParameterResolutionException("Failed to create temp directory: " + baseDir, e);
-		}
-
-		Class<?> resultType = parameterContext.getParameter().getType();
-
-		if (File.class.equals(resultType)) {
-			return file.toFile();
-		} else if (Path.class.equals(resultType)) {
-			return file;
-		} else if (String.class.equals(resultType)) {
-			return file.toString();
-		}
-
-		throw new ParameterResolutionException("Unsupported parameter type: " + resultType);
+		return getResultType(parameterContext, file);
 	}
 
 	/**
@@ -371,6 +354,28 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
+	 * DOCME add JavaDoc for method getResultType
+	 * 
+	 * @param parameterContext
+	 * @param file
+	 * @return
+	 * @since 0.2.0
+	 */
+	private Object getResultType(ParameterContext parameterContext, Path file) {
+		Class<?> resultType = parameterContext.getParameter().getType();
+
+		if (File.class.equals(resultType)) {
+			return file.toFile();
+		} else if (Path.class.equals(resultType)) {
+			return file;
+		} else if (String.class.equals(resultType)) {
+			return file.toString();
+		}
+
+		throw new ParameterResolutionException("Unsupported parameter type: " + resultType);
+	}
+
+	/**
 	 * @param context
 	 *            {@link ExtensionContext}
 	 * @return {@link ExtensionContext.Store}
@@ -402,6 +407,26 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 			}
 			default -> false;
 		};
+	}
+
+	/**
+	 * DOCME add JavaDoc for method maybeCreateDirectories
+	 * 
+	 * @param extensionContext
+	 * @param fileType
+	 * @param file
+	 * @since 0.2.0
+	 */
+	private void maybeCreateDirectories(ExtensionContext extensionContext, FileType fileType, Path file) {
+		maybeCreateDirectory(extensionContext, file, fileType);
+
+		Path baseDir = getDirectoryFor(fileType);
+
+		try {
+			Files.createDirectories(baseDir);
+		} catch (IOException e) {
+			throw new ParameterResolutionException("Failed to create temp directory: " + baseDir, e);
+		}
 	}
 
 	/**

@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * DOCME add JavaDoc for
+ * Configures handling of {@link TempInputFile}.
  *
  * @author André Schulz
  *
@@ -17,9 +17,9 @@ import java.lang.annotation.Target;
 public @interface WithTempInputFiles {
 
 	/**
-	 * DOCME add JavaDoc for method extension
+	 * The file extension to use for {@link TempInputFile}s.
 	 * 
-	 * @return
+	 * @return the file extension (default is {@code tmp})
 	 * @since 0.2.0
 	 */
 	String extension() default "tmp";

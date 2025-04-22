@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * DOCME add JavaDoc for
+ * Configures handling of {@link TempInputDirectory}.
  *
  * @author André Schulz
  *
@@ -17,7 +17,7 @@ import java.lang.annotation.Target;
 public @interface WithTempInputDirectories {
 
 	/**
-	 * @return
+	 * @return {@code true} results in creation of the directory
 	 * @since 0.2.0
 	 */
 	boolean create() default false;

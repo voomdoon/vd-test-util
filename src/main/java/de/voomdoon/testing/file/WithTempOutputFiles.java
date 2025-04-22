@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Configuration annotation for tests using {@link TempOutputFile}. Allows setting the file extension for output files.
+ * Configures handling of {@link TempOutputFile}.
  * 
  * @author André Schulz
  *
@@ -19,7 +19,7 @@ public @interface WithTempOutputFiles {
 	/**
 	 * File extension to use for {@link TempOutputFile}s.
 	 * 
-	 * @return the file extension (default is "tmp")
+	 * @return the file extension (default is {@code tmp})
 	 * @since 0.2.0
 	 */
 	String extension() default "tmp";
