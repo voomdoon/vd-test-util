@@ -115,7 +115,7 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	 *
 	 * @since 0.2.0
 	 */
-	private enum FileType {
+	enum FileType {
 
 		/**
 		 * @since 0.2.0
@@ -143,6 +143,17 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		OUTPUT_DIRECTORY,
 
 		;
+
+		/**
+		 * @return
+		 * @since 0.2.0
+		 */
+		private boolean isFile() {
+			return switch (this) {
+				case DEFAULT, INPUT, OUTPUT -> true;
+				case INPUT_DIRECTORY, OUTPUT_DIRECTORY -> false;
+			};
+		}
 	}
 
 	public static final String STORE_KEY_ROOT = "temp-files";
@@ -324,7 +335,7 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 			default -> throw new UnsupportedOperationException("Method 'getNext' not implemented yet");
 		};
 
-		String suffix = isFile(type) ? "." + getConfiguredFileNameExtension(context, type) : "";
+		String suffix = type.isFile() ? "." + getConfiguredFileNameExtension(context, type) : "";
 
 		Path result;
 		int i = 1;
@@ -394,21 +405,6 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method isFile
-	 * 
-	 * @param type
-	 * @return
-	 * @since 0.2.0
-	 */
-	private boolean isFile(FileType type) {
-		// TODO move to enum
-		return switch (type) {
-			case DEFAULT, INPUT, OUTPUT -> true;
-			case INPUT_DIRECTORY, OUTPUT_DIRECTORY -> false;
-		};
-	}
-
-	/**
 	 * DOCME add JavaDoc for method maybeCreateDirectory
 	 * 
 	 * @param context
@@ -417,7 +413,7 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	 * @since 0.2.0
 	 */
 	private void maybeCreateDirectory(ExtensionContext context, Path file, FileType fileType) {
-		if (!isFile(fileType) && isDirectoryCreationConfigured(context, fileType)) {
+		if (!fileType.isFile() && isDirectoryCreationConfigured(context, fileType)) {
 			try {
 				Files.createDirectories(file);
 			} catch (IOException e) {
