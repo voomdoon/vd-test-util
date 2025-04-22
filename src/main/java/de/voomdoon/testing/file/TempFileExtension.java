@@ -177,8 +177,6 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		FileType fileType = getFileType(parameterContext);
 		Path file = getNext(extensionContext, fileType);
 
-		System.out.println("result: " + file);
-
 		Path baseDir = getDirectoryFor(fileType);
 
 		try {
