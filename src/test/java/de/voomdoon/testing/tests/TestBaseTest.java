@@ -84,7 +84,7 @@ public class TestBaseTest {
 		private List<LogEvent> logEvents = new ArrayList<>();
 
 		/**
-		 * @since DOCME add inception version number
+		 * @since 0.2.0
 		 */
 		@Override
 		public void handleLogEvent(LogEvent logEvent) {
@@ -92,7 +92,7 @@ public class TestBaseTest {
 		}
 
 		/**
-		 * @since DOCME add inception version number
+		 * @since 0.2.0
 		 */
 		@AfterEach
 		void afterEach_removeLogEventHandler() {

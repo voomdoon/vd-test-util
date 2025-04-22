@@ -66,7 +66,19 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * }
  * </pre>
  *
+ * <p>
+ * Special behavior can be configured using the following annotations:
+ * <ul>
+ * <li>{@link WithTempInputFiles}</li>
+ * <li>{@link WithTempInputDirectories}</li>
+ * <li>{@link WithTempOutputFiles}</li>
+ * <li>{@link WithTempOutputDirectories}</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
  * Directory structure:
+ * </p>
  * 
  * <pre>
  * target
@@ -177,6 +189,8 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		FileType fileType = getFileType(parameterContext);
 		Path file = getNext(extensionContext, fileType);
 
+		maybeCreateDirectory(extensionContext, file, fileType);
+
 		Path baseDir = getDirectoryFor(fileType);
 
 		try {
@@ -185,17 +199,17 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 			throw new ParameterResolutionException("Failed to create temp directory: " + baseDir, e);
 		}
 
-		Class<?> type = parameterContext.getParameter().getType();
+		Class<?> resultType = parameterContext.getParameter().getType();
 
-		if (File.class.equals(type)) {
+		if (File.class.equals(resultType)) {
 			return file.toFile();
-		} else if (Path.class.equals(type)) {
+		} else if (Path.class.equals(resultType)) {
 			return file;
-		} else if (String.class.equals(type)) {
+		} else if (String.class.equals(resultType)) {
 			return file.toString();
 		}
 
-		throw new ParameterResolutionException("Unsupported parameter type: " + type);
+		throw new ParameterResolutionException("Unsupported parameter type: " + resultType);
 	}
 
 	/**
@@ -356,6 +370,30 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
+	 * DOCME add JavaDoc for method isDirectoryCreationConfigured
+	 * 
+	 * @param context
+	 * @param fileType
+	 * @return
+	 * @since 0.2.0
+	 */
+	private boolean isDirectoryCreationConfigured(ExtensionContext context, FileType fileType) {
+		Class<?> testClass = context.getRequiredTestClass();
+
+		return switch (fileType) {
+			case INPUT_DIRECTORY -> {
+				WithTempInputDirectories config = testClass.getAnnotation(WithTempInputDirectories.class);
+				yield (config != null) ? config.create() : false;
+			}
+			case OUTPUT_DIRECTORY -> {
+				WithTempOutputDirectories config = testClass.getAnnotation(WithTempOutputDirectories.class);
+				yield (config != null) ? config.create() : false;
+			}
+			default -> false;
+		};
+	}
+
+	/**
 	 * DOCME add JavaDoc for method isFile
 	 * 
 	 * @param type
@@ -363,10 +401,29 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	 * @since 0.2.0
 	 */
 	private boolean isFile(FileType type) {
+		// TODO move to enum
 		return switch (type) {
 			case DEFAULT, INPUT, OUTPUT -> true;
 			case INPUT_DIRECTORY, OUTPUT_DIRECTORY -> false;
 		};
+	}
+
+	/**
+	 * DOCME add JavaDoc for method maybeCreateDirectory
+	 * 
+	 * @param context
+	 * @param file
+	 * @param fileType
+	 * @since 0.2.0
+	 */
+	private void maybeCreateDirectory(ExtensionContext context, Path file, FileType fileType) {
+		if (!isFile(fileType) && isDirectoryCreationConfigured(context, fileType)) {
+			try {
+				Files.createDirectories(file);
+			} catch (IOException e) {
+				throw new RuntimeException("Error at 'maybeCreateDirectory': " + e.getMessage(), e);
+			}
+		}
 	}
 
 	/**
