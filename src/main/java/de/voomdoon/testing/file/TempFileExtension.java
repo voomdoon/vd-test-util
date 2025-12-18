@@ -107,7 +107,9 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * @author André Schulz
  * 
  * @since 0.2.0
+ * @deprecated moved to {@code vd-testing-file} module
  */
+@Deprecated
 public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 
 	/**

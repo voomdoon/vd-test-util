@@ -11,9 +11,11 @@ import java.lang.annotation.Target;
  * @author André Schulz
  *
  * @since 0.2.0
+ * @deprecated moved to {@code vd-testing-file} module
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.PARAMETER)
+@Deprecated
 public @interface TempOutputDirectory {
 
 }
