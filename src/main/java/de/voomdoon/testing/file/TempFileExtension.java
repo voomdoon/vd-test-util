@@ -18,7 +18,7 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
 /**
- * JUnit 5 extension that injects temporary file or directory instances into test method parameters.
+ * JUnit extension that injects temporary file or directory instances into test method parameters.
  *
  * Behavior:
  * <ul>
@@ -83,25 +83,25 @@ import org.junit.jupiter.api.extension.ParameterResolver;
  * 
  * <pre>
  * target
- *  └── test-temp
- *      ├── file_1.tmp (by TempFile)
- *      ├── file_2.tmp
- *      ├── input
- *      │   ├── 0
- *      │   │   ├── input_1.tmp (by TempInputFile)
- *      │   │   ├── input_2.tmp
- *      │   │   └── ...
- *      │   ├── directory_1 (by TempInputDirectory)
- *      │   ├── directory_2
- *      │   └── ...
- *      └── output
- *          ├── 0
- *          │   ├── output_1.tmp (by TempOutputFile)
- *          │   ├── output_2.tmp
- *          │	└── ...
- *          ├── directory_1 (by TempOutputDirectory)
- *          ├── directory_2
- *          └── ...
+ * └── test-temp
+ *     ├── file_1.tmp (by TempFile)
+ *     ├── file_2.tmp
+ *     ├── input
+ *     │   ├── 0
+ *     │   │   ├── input_1.tmp (by TempInputFile)
+ *     │   │   ├── input_2.tmp
+ *     │   │   └── ...
+ *     │   ├── input-directory_1 (by TempInputDirectory)
+ *     │   ├── input-directory_2
+ *     │   └── ...
+ *     └── output
+ *         ├── 0
+ *         │   ├── output_1.tmp (by TempOutputFile)
+ *         │   ├── output_2.tmp
+ *         │	└── ...
+ *         ├── output-directory_1 (by TempOutputDirectory)
+ *         ├── output-directory_2
+ *         └── ...
  * </pre>
  *
  * @author André Schulz
@@ -199,11 +199,11 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
 			throws ParameterResolutionException {
 		FileType fileType = getFileType(parameterContext);
-		Path file = getNext(extensionContext, fileType);
+		Path fileOrDirectory = getNext(extensionContext, fileType);
 
-		maybeCreateDirectories(extensionContext, fileType, file);
+		maybeCreateDirectories(extensionContext, fileType, fileOrDirectory);
 
-		return getResultType(parameterContext, file);
+		return getResultType(parameterContext, fileOrDirectory);
 	}
 
 	/**
@@ -290,7 +290,6 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		} else if (parameterContext.isAnnotated(TempFile.class)) {
 			return FileType.DEFAULT;
 		} else {
-			// TODO implement getFileType
 			throw new UnsupportedOperationException("Method 'getFileType' not implemented for "
 					+ Arrays.stream(parameterContext.getAnnotatedElement().getAnnotations())
 							.map(Annotation::annotationType).toList());
@@ -311,9 +310,9 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 
 		String prefix = switch (type) {
 			case INPUT -> "input";
-			case INPUT_DIRECTORY -> "input/directory";
+			case INPUT_DIRECTORY -> "input/input-directory";
 			case OUTPUT -> "output";
-			case OUTPUT_DIRECTORY -> "output/directory";
+			case OUTPUT_DIRECTORY -> "output/output-directory";
 			case DEFAULT -> "file";
 			default -> throw new UnsupportedOperationException("Method 'getNext' not implemented yet");
 		};
@@ -334,7 +333,8 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method getOrCreateFiles
+	 * Returns the list of all files for the given {@link FileType} from the store. If no list exists yet, a new one is
+	 * created.
 	 * 
 	 * @param context
 	 *            {@link ExtensionContext}
@@ -347,35 +347,39 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		String key = STORE_KEYS.get(type);
 
 		@SuppressWarnings("unchecked")
-		List<Path> result = getStore(context).getOrComputeIfAbsent(key,
-				k -> Collections.synchronizedList(new ArrayList<>()), List.class);
+		List<Path> result = getStore(context).computeIfAbsent(key, k -> Collections.synchronizedList(new ArrayList<>()),
+				List.class);
 
 		return result;
 	}
 
 	/**
-	 * DOCME add JavaDoc for method getResultType
+	 * Returns an object of the type configured in the parameter context.
 	 * 
 	 * @param parameterContext
-	 * @param file
-	 * @return
+	 *            {@link ParameterContext}
+	 * @param fileOrDirectory
+	 *            {@link Path} representing file or directory
+	 * @return Object of type configured in {@link ParameterContext}
 	 * @since 0.2.0
 	 */
-	private Object getResultType(ParameterContext parameterContext, Path file) {
+	private Object getResultType(ParameterContext parameterContext, Path fileOrDirectory) {
 		Class<?> resultType = parameterContext.getParameter().getType();
 
 		if (File.class.equals(resultType)) {
-			return file.toFile();
+			return fileOrDirectory.toFile();
 		} else if (Path.class.equals(resultType)) {
-			return file;
+			return fileOrDirectory;
 		} else if (String.class.equals(resultType)) {
-			return file.toString();
+			return fileOrDirectory.toString();
 		}
 
 		throw new ParameterResolutionException("Unsupported parameter type: " + resultType);
 	}
 
 	/**
+	 * Returns the store for the given extension context.
+	 * 
 	 * @param context
 	 *            {@link ExtensionContext}
 	 * @return {@link ExtensionContext.Store}
@@ -386,11 +390,13 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method isDirectoryCreationConfigured
+	 * Returns whether directory creation is configured for the given {@link FileType}.
 	 * 
 	 * @param context
+	 *            {@link ExtensionContext}
 	 * @param fileType
-	 * @return
+	 *            {@link FileType}
+	 * @return {@code true} if directory creation is configured for the given file type, {@code false} otherwise
 	 * @since 0.2.0
 	 */
 	private boolean isDirectoryCreationConfigured(ExtensionContext context, FileType fileType) {
@@ -399,26 +405,29 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 		return switch (fileType) {
 			case INPUT_DIRECTORY -> {
 				WithTempInputDirectories config = testClass.getAnnotation(WithTempInputDirectories.class);
-				yield (config != null) ? config.create() : false;
+				yield config != null && config.create();
 			}
 			case OUTPUT_DIRECTORY -> {
 				WithTempOutputDirectories config = testClass.getAnnotation(WithTempOutputDirectories.class);
-				yield (config != null) ? config.create() : false;
+				yield config != null && config.create();
 			}
 			default -> false;
 		};
 	}
 
 	/**
-	 * DOCME add JavaDoc for method maybeCreateDirectories
+	 * Creates necessary directories for the given file or directory, if configured.
 	 * 
 	 * @param extensionContext
+	 *            {@link ExtensionContext}
 	 * @param fileType
-	 * @param file
+	 *            {@link FileType}
+	 * @param fileOrDirectory
+	 *            {@link Path} representing file or directory
 	 * @since 0.2.0
 	 */
-	private void maybeCreateDirectories(ExtensionContext extensionContext, FileType fileType, Path file) {
-		maybeCreateDirectory(extensionContext, file, fileType);
+	private void maybeCreateDirectories(ExtensionContext extensionContext, FileType fileType, Path fileOrDirectory) {
+		maybeCreateDirectory(extensionContext, fileType, fileOrDirectory);
 
 		Path baseDir = getDirectoryFor(fileType);
 
@@ -430,19 +439,23 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	}
 
 	/**
-	 * DOCME add JavaDoc for method maybeCreateDirectory
+	 * Creates the given directory, if configured.
 	 * 
 	 * @param context
-	 * @param file
+	 *            {@link ExtensionContext}
 	 * @param fileType
+	 *            {@link FileType}
+	 * @param fileOrDirectory
+	 *            {@link Path} representing file or directory
 	 * @since 0.2.0
 	 */
-	private void maybeCreateDirectory(ExtensionContext context, Path file, FileType fileType) {
+	private void maybeCreateDirectory(ExtensionContext context, FileType fileType, Path fileOrDirectory) {
 		if (!fileType.isFile() && isDirectoryCreationConfigured(context, fileType)) {
 			try {
-				Files.createDirectories(file);
+				Files.createDirectories(fileOrDirectory);
 			} catch (IOException e) {
-				throw new RuntimeException("Error at 'maybeCreateDirectory': " + e.getMessage(), e);
+				throw new ParameterResolutionException(
+						"Failed to create directories for " + fileOrDirectory + ": " + e.getMessage(), e);
 			}
 		}
 	}
@@ -450,30 +463,26 @@ public class TempFileExtension implements ParameterResolver, AfterEachCallback {
 	/**
 	 * @param parameterContext
 	 *            {@link ParameterContext}
-	 * @return
+	 * @return {@code true} if parameter is annotated with a supported annotation, {@code false} otherwise
 	 * @since 0.2.0
 	 */
 	private boolean supportsAnnotation(ParameterContext parameterContext) {
-		boolean isAnnotated = //
-				parameterContext.isAnnotated(TempFile.class) //
-						|| parameterContext.isAnnotated(TempInputFile.class)//
-						|| parameterContext.isAnnotated(TempInputDirectory.class)//
-						|| parameterContext.isAnnotated(TempOutputFile.class)//
-						|| parameterContext.isAnnotated(TempOutputDirectory.class);
-		return isAnnotated;
+		return parameterContext.isAnnotated(TempFile.class) //
+				|| parameterContext.isAnnotated(TempInputFile.class)//
+				|| parameterContext.isAnnotated(TempInputDirectory.class)//
+				|| parameterContext.isAnnotated(TempOutputFile.class)//
+				|| parameterContext.isAnnotated(TempOutputDirectory.class);
 	}
 
 	/**
 	 * @param parameterContext
 	 *            {@link ParameterContext}
-	 * @return
+	 * @return {@code true} if parameter is of a supported type, {@code false} otherwise
 	 * @since 0.2.0
 	 */
 	private boolean supportsType(ParameterContext parameterContext) {
-		boolean isSupportedType = //
-				File.class.isAssignableFrom(parameterContext.getParameter().getType())
-						|| Path.class.isAssignableFrom(parameterContext.getParameter().getType())
-						|| String.class.isAssignableFrom(parameterContext.getParameter().getType());
-		return isSupportedType;
+		return File.class.isAssignableFrom(parameterContext.getParameter().getType())
+				|| Path.class.isAssignableFrom(parameterContext.getParameter().getType())
+				|| String.class.isAssignableFrom(parameterContext.getParameter().getType());
 	}
 }
