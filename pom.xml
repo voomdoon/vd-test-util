@@ -11,7 +11,7 @@
 	</parent>
 
 	<groupId>de.voomdoon.testing</groupId>
-	<artifactId>vd-test-util</artifactId>
+	<artifactId>vd-testing-util</artifactId>
 	<version>0.2.0-SNAPSHOT</version>
 
 	<properties>
